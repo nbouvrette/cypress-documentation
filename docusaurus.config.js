@@ -74,26 +74,25 @@ const config = {
         async loadContent() {
           // get files & sort desc
           const dirPath = path.join(__dirname, '/docs/guides/references/_changelogs');
-          const changelogs = fs.readdirSync(dirPath)
+          try {
+            const changelogs = await fs.promises.readdir(dirPath);
             const sortedChangelogs = changelogs.sort((a, b) => {
             return b.localeCompare(a, undefined, { numeric: true, sensitivity: 'base' })
           })
-          // .sort(sortChangelogs)
-          // console.log(sortedChangelogs)
-
-          sortedChangelogs.forEach(file => { 
-            const filePath = path.join(dirPath, file);
-            return fs.readFile(filePath, (err, data) => {
-                if (err) console.log(err);
-                // console.log(data.toString());
-                return data.toString()
-              });
-            });
-
-          // return sortedChangelogs;
+           // read each changlelog file to get contents
+           const data = []
+            for (const file of sortedChangelogs) {
+              const filePath = path.join(dirPath, file);
+              const contents = await fs.promises.readFile(filePath, { encoding: 'utf8' })
+              data.push(contents)
+            }
+            return data
+          } catch (err) {
+            console.error(err);
+          }
         },
         async contentLoaded({content, actions}) {
-          console.log('from contentLoaded:', content);
+          // console.log('from contentLoaded:', content);
           const {setGlobalData, addRoute} = actions;
           // Create friends global data
           setGlobalData({changelogs: content});
