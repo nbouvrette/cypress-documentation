@@ -4,6 +4,7 @@
 const lightCodeTheme = require('prism-react-renderer/themes/vsDark')
 const darkCodeTheme = require('prism-react-renderer/themes/dracula')
 const fs = require('fs')
+const path = require('path');
 const {
   copyTsToJs,
   cypressConfigPluginExample,
@@ -67,6 +68,45 @@ const config = {
 
   plugins: [
     './plugins/fav-icon',
+    async function myPlugin(context, options) {
+      return {
+        name: 'changelog-data',
+        async loadContent() {
+          // get files & sort desc
+          const dirPath = path.join(__dirname, '/docs/guides/references/_changelogs');
+          const changelogs = fs.readdirSync(dirPath)
+            const sortedChangelogs = changelogs.sort((a, b) => {
+            return b.localeCompare(a, undefined, { numeric: true, sensitivity: 'base' })
+          })
+          // .sort(sortChangelogs)
+          // console.log(sortedChangelogs)
+
+          sortedChangelogs.forEach(file => { 
+            const filePath = path.join(dirPath, file);
+            return fs.readFile(filePath, (err, data) => {
+                if (err) console.log(err);
+                // console.log(data.toString());
+                return data.toString()
+              });
+            });
+
+          // return sortedChangelogs;
+        },
+        async contentLoaded({content, actions}) {
+          console.log('from contentLoaded:', content);
+          const {setGlobalData, addRoute} = actions;
+          // Create friends global data
+          setGlobalData({changelogs: content});
+
+          // Add routes
+          addRoute({
+            path: '/changelogs',
+            component: '@site/src/components/changelog',
+            exact: true,
+          });
+        },
+      };
+    },
   ],
   themeConfig:
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
